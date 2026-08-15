@@ -1,0 +1,22 @@
+{
+  "name": "家庭菜園ノート",
+  "short_name": "菜園ノート",
+  "description": "家庭菜園の野菜・作業・栽培記録・収穫を管理するアプリ",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f8f5",
+  "theme_color": "#2f7d32",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

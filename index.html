@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f7d32">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>家庭菜園ノート</title>
+<style>
+:root{--green:#2f7d32;--green2:#e8f5e9;--ink:#263238;--muted:#78909c;--bg:#f6f8f5;--card:#fff;--line:#e3e9e3;--orange:#ef8f2f}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+.app{max-width:720px;margin:auto;min-height:100vh;padding-bottom:84px}
+header{padding:24px 18px 12px;background:linear-gradient(135deg,#2f7d32,#5da85e);color:#fff}
+header h1{margin:0;font-size:25px}header p{margin:5px 0 0;opacity:.9;font-size:13px}
+main{padding:16px}.section-title{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 10px}.section-title h2{font-size:17px;margin:0}.link{border:0;background:none;color:var(--green);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 3px 12px #00000008}.stat{padding:13px}.stat b{font-size:23px;display:block}.stat span{font-size:12px;color:var(--muted)}
+.tasks{display:grid;gap:10px}.task{display:flex;gap:12px;align-items:center;padding:13px}.task .dot{width:11px;height:11px;border-radius:50%;background:var(--orange);flex:none}.task small{display:block;color:var(--muted);margin-top:3px}
+.plants{display:grid;gap:10px}.plant{padding:14px;display:flex;gap:13px;align-items:center}.plant .emoji{font-size:36px;width:48px;text-align:center}.plant h3{margin:0 0 3px;font-size:16px}.plant p{margin:0;color:var(--muted);font-size:12px}
+button,.btn{font:inherit;cursor:pointer}.primary{border:0;background:var(--green);color:white;padding:11px 15px;border-radius:12px;font-weight:700}.secondary{border:1px solid var(--line);background:white;padding:10px 14px;border-radius:12px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(720px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-top:1px solid var(--line);padding:8px 8px max(8px,env(safe-area-inset-bottom));z-index:5}
+nav button{border:0;background:none;color:var(--muted);font-size:11px;padding:7px}nav button.active{color:var(--green);font-weight:800}nav .ico{font-size:20px;display:block}
+.view{display:none}.view.active{display:block}
+.form{display:grid;gap:12px}.form label{font-size:13px;font-weight:700}.form input,.form select,.form textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;font:inherit}.form textarea{min-height:100px}
+.modal{position:fixed;inset:0;background:#0006;display:none;align-items:end;z-index:10}.modal.open{display:flex}.sheet{background:#fff;width:100%;max-width:720px;margin:auto;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow:auto}.sheet-head{display:flex;justify-content:space-between;align-items:center}.sheet h2{margin:0 0 15px}.close{border:0;background:#eef2ee;border-radius:50%;width:34px;height:34px}
+.empty{text-align:center;color:var(--muted);padding:30px}.badge{display:inline-block;background:var(--green2);color:var(--green);padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}
+</style>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));}</script>
+</head>
+<body>
+<div class="app">
+<header><h1>🌱 家庭菜園ノート</h1><p>今日の畑を、かんたんに記録。</p></header>
+<main>
+<section id="home" class="view active">
+  <div class="section-title"><h2>今日のようす</h2><span class="badge" id="today"></span></div>
+  <div class="stats">
+    <div class="stat"><b id="plantCount">0</b><span>育てている野菜</span></div>
+    <div class="stat"><b id="taskCount">0</b><span>今日の作業</span></div>
+    <div class="stat"><b id="harvestCount">0</b><span>収穫記録</span></div>
+  </div>
+  <div class="section-title"><h2>今日の作業</h2><button class="link" onclick="openTask()">＋追加</button></div>
+  <div id="tasks" class="tasks"></div>
+  <div class="section-title"><h2>栽培中の野菜</h2><button class="link" onclick="show('plants')">すべて見る</button></div>
+  <div id="homePlants" class="plants"></div>
+</section>
+
+<section id="plants" class="view">
+  <div class="section-title"><h2>🌿 野菜一覧</h2><button class="primary" onclick="openPlant()">＋ 野菜を追加</button></div>
+  <div id="plantList" class="plants"></div>
+</section>
+
+<section id="records" class="view">
+  <div class="section-title"><h2>📝 栽培記録</h2><button class="primary" onclick="openRecord()">＋ 記録する</button></div>
+  <div id="recordList"></div>
+</section>
+
+<section id="calendar" class="view">
+  <div class="section-title"><h2>📅 カレンダー</h2></div>
+  <div class="card" style="padding:18px">
+    <h3 style="margin-top:0">今月やること</h3>
+    <p style="color:var(--muted)">登録した作業をここにまとめて表示します。</p>
+    <div id="calendarTasks"></div>
+  </div>
+</section>
+</main>
+<nav>
+<button class="active" onclick="show('home',this)"><span class="ico">🏠</span>ホーム</button>
+<button onclick="show('plants',this)"><span class="ico">🌱</span>野菜</button>
+<button onclick="show('records',this)"><span class="ico">📝</span>記録</button>
+<button onclick="show('calendar',this)"><span class="ico">📅</span>予定</button>
+</nav>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet">
+<div class="sheet-head"><h2 id="modalTitle"></h2><button class="close" onclick="closeModal()">×</button></div>
+<div id="modalBody"></div></div></div>
+
+<script>
+const KEY='garden-note-v1';
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||{
+ plants:[
+  {id:1,name:'ミニトマト',variety:'アイコ',place:'ベランダ1号',emoji:'🍅',date:'2026-05-10'},
+  {id:2,name:'バジル',variety:'スイートバジル',place:'プランターA',emoji:'🌿',date:'2026-05-25'}
+ ],
+ tasks:[
+  {id:1,title:'ミニトマトに水やり',date:'2026-08-15',plantId:1},
+  {id:2,title:'バジルを収穫',date:'2026-08-15',plantId:2}
+ ],
+ records:[
+  {id:1,date:'2026-08-14',plantId:1,type:'成長',text:'実が5個ついてきた。背丈は約80cm。'},
+  {id:2,date:'2026-08-12',plantId:2,type:'水やり',text:'朝たっぷり水やり。'}
+ ],
+ harvests:[]
+};
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function plant(id){return data.plants.find(x=>x.id==id)}
+function fmt(d){return new Date(d+'T00:00:00').toLocaleDateString('ja-JP',{month:'long',day:'numeric'})}
+function render(){
+ const today=new Date().toISOString().slice(0,10);
+ document.getElementById('today').textContent=fmt(today);
+ document.getElementById('plantCount').textContent=data.plants.length;
+ document.getElementById('taskCount').textContent=data.tasks.filter(x=>x.date===today).length;
+ document.getElementById('harvestCount').textContent=data.harvests.length;
+ const tasks=data.tasks.filter(x=>x.date===today);
+ document.getElementById('tasks').innerHTML=tasks.length?tasks.map(t=>`<div class="task card"><span class="dot"></span><div><b>${esc(t.title)}</b><small>${esc(plant(t.plantId)?.name||'')}</small></div><button class="secondary" style="margin-left:auto" onclick="doneTask(${t.id})">完了</button></div>`).join(''):'<div class="empty card">今日の作業はありません 🎉</div>';
+ const cards=data.plants.map(p=>`<div class="plant card"><div class="emoji">${p.emoji}</div><div><h3>${esc(p.name)} <span class="badge">${esc(p.variety)}</span></h3><p>${esc(p.place)} ・ ${fmt(p.date)}から栽培</p></div></div>`);
+ document.getElementById('homePlants').innerHTML=cards.slice(0,3).join('')||'<div class="empty">まだ野菜が登録されていません。</div>';
+ document.getElementById('plantList').innerHTML=cards.join('')||'<div class="empty card">「野菜を追加」から登録できます。</div>';
+ document.getElementById('recordList').innerHTML=data.records.length?data.records.slice().reverse().map(r=>{let p=plant(r.plantId);return `<div class="card" style="padding:15px;margin-bottom:10px"><div><span class="badge">${esc(r.type)}</span> <small style="color:var(--muted)">${fmt(r.date)}</small></div><h3 style="margin:8px 0 4px">${esc(p?.emoji||'🌱')} ${esc(p?.name||'')}</h3><p style="margin:0">${esc(r.text)}</p></div>`}).join(''):'<div class="empty card">まだ記録がありません。</div>';
+ document.getElementById('calendarTasks').innerHTML=data.tasks.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><b>${fmt(t.date)}</b>　${esc(t.title)}</div>`).join('')||'<p>予定はありません。</p>';
+}
+function show(id,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');if(btn){document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}else{document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.textContent.includes(id==='plants'?'野菜':id==='records'?'記録':id==='calendar'?'予定':'ホーム')))}}
+function open(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function openPlant(){open('野菜を追加',`<form class="form" onsubmit="addPlant(event)">
+<label>野菜名<input name="name" placeholder="例：ミニトマト" required></label>
+<label>品種<input name="variety" placeholder="例：アイコ"></label>
+<label>場所<input name="place" placeholder="例：ベランダ1号"></label>
+<label>絵文字<input name="emoji" value="🌱" maxlength="2"></label>
+<label>植え付け日<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
+<button class="primary">登録する</button></form>`)}
+function addPlant(e){e.preventDefault();let f=new FormData(e.target);data.plants.push({id:Date.now(),name:f.get('name'),variety:f.get('variety'),place:f.get('place'),emoji:f.get('emoji')||'🌱',date:f.get('date')});closeModal();save()}
+function openTask(){open('作業を追加',`<form class="form" onsubmit="addTask(event)">
+<label>作業内容<input name="title" placeholder="例：トマトに追肥" required></label>
+<label>対象<input name="plantId" type="hidden"><select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
+<label>日付<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
+<button class="primary">登録する</button></form>`)}
+function addTask(e){e.preventDefault();let f=new FormData(e.target);data.tasks.push({id:Date.now(),title:f.get('title'),date:f.get('date'),plantId:Number(f.get('pid'))});closeModal();save()}
+function doneTask(id){data.tasks=data.tasks.filter(t=>t.id!==id);save()}
+function openRecord(){open('栽培記録',`<form class="form" onsubmit="addRecord(event)">
+<label>野菜<select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
+<label>種類<select name="type"><option>成長</option><option>水やり</option><option>肥料</option><option>病害虫</option><option>剪定</option><option>収穫</option></select></label>
+<label>日付<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
+<label>メモ<textarea name="text" placeholder="今日のようすを記録"></textarea></label>
+<button class="primary">記録する</button></form>`)}
+function addRecord(e){e.preventDefault();let f=new FormData(e.target);let type=f.get('type');data.records.push({id:Date.now(),date:f.get('date'),plantId:Number(f.get('pid')),type,text:f.get('text')});if(type==='収穫')data.harvests.push({id:Date.now(),date:f.get('date'),plantId:Number(f.get('pid'))});closeModal();save()}
+render();
+</script>
+</body>
+</html>
