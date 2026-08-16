@@ -26,6 +26,7 @@ button,.btn{font:inherit;cursor:pointer}.primary{border:0;background:var(--green
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid var(--line);padding:7px 6px max(7px,env(safe-area-inset-bottom));z-index:10}nav button{border:0;background:none;color:var(--muted);font-size:10px;padding:5px}.ico{font-size:20px;display:block;margin-bottom:2px}nav button.active{color:var(--green);font-weight:800}
 footer{font-size:10px;color:var(--muted);padding:20px 4px;text-align:center}
 @media(max-width:430px){.weather-grid{grid-template-columns:repeat(5,72px)}.grid2{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:11px}.stat b{font-size:21px}}
+.danger-btn{color:#a94442;border-color:#efcccc}.danger-btn:hover{background:#fff5f5}
 </style>
 </head>
 <body>
@@ -181,11 +182,11 @@ function renderTasks(){
  document.getElementById('tasks').innerHTML=ts.length?ts.map(t=>`<div class="task card"><span class="dot"></span><div><b>${esc(t.title)}</b><small>${esc(plant(t.plantId)?.name||'')}</small></div><button class="secondary" style="margin-left:auto" onclick="doneTask(${t.id})">完了</button></div>`).join(''):'<div class="empty card">今日の作業はありません 🎉</div>';
 }
 function renderPlants(){
- const html=data.plants.map(p=>{let c=cropInfo(p.name),b=bed(p.bedId);return `<div class="plant card"><div class="emoji">${esc(p.emoji||c.emoji)}</div><div><h3>${esc(p.name)} ${p.variety?`<span class="badge">${esc(p.variety)}</span>`:''}</h3><p>${esc(b?.name||p.place||'区画未設定')} ・ ${fmt(p.date)}から</p></div></div>`}).join('');
+ const html=data.plants.map(p=>{let c=cropInfo(p.name),b=bed(p.bedId);return `<div class="plant card"><div class="emoji">${esc(p.emoji||c.emoji)}</div><div style="flex:1"><h3>${esc(p.name)} ${p.variety?`<span class="badge">${esc(p.variety)}</span>`:''}</h3><p>${esc(b?.name||p.place||'区画未設定')} ・ ${fmt(p.date)}から</p></div><div style="display:flex;gap:6px"><button class="secondary" onclick="openEditPlant(${p.id})">編集</button><button class="secondary danger-btn" onclick="deletePlant(${p.id})">削除</button></div></div>`}).join('');
  document.getElementById('plantList').innerHTML=html||'<div class="empty card">まだ野菜がありません。</div>';
 }
 function renderBeds(){
- document.getElementById('bedList').innerHTML=data.beds.length?data.beds.map(b=>{let latest=(b.history||[]).slice().sort((a,c)=>c.year-a.year)[0];let ci=latest?cropInfo(latest.crop):null;return `<div class="bed card"><div><h3>${esc(b.name)}</h3><p>${esc(b.type)} ・ 最新作付け：${latest?esc(latest.crop):'なし'} ${latest?`(${latest.year})`:''}</p></div><div class="crop">${ci?.emoji||'🪴'}</div></div>`}).join(''):'<div class="empty card">区画を追加すると連作管理ができます。</div>';
+ document.getElementById('bedList').innerHTML=data.beds.length?data.beds.map(b=>{let latest=(b.history||[]).slice().sort((a,c)=>c.year-a.year)[0];let ci=latest?cropInfo(latest.crop):null;return `<div class="bed card"><div style="flex:1"><h3>${esc(b.name)}</h3><p>${esc(b.type)} ・ 最新作付け：${latest?esc(latest.crop):'なし'} ${latest?`(${latest.year})`:''}</p></div><div style="display:flex;gap:6px;align-items:center"><div class="crop">${ci?.emoji||'🪴'}</div><button class="secondary" onclick="openEditBed(${b.id})">編集</button><button class="secondary danger-btn" onclick="deleteBed(${b.id})">削除</button></div></div>`}).join(''):'<div class="empty card">区画を追加すると連作管理ができます。</div>';
 }
 function renderRecords(){
  document.getElementById('recordList').innerHTML=data.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>{let p=plant(r.plantId);return `<div class="record card"><span class="badge">${esc(r.type)}</span> <small>${fmt(r.date)}</small><h3 style="margin:7px 0 4px">${esc(p?.emoji||'🌱')} ${esc(p?.name||'')}</h3><div>${esc(r.text||'')}</div></div>`}).join('')||'<div class="empty card">まだ記録がありません。</div>';
@@ -210,6 +211,41 @@ function openBed(){openModal('区画を追加',`<form class="form" onsubmit="add
 <label>種類<select name="type"><option>地植え</option><option>プランター</option><option>鉢</option><option>その他</option></select></label>
 <button class="primary">登録する</button></form>`)}
 function addBed(e){e.preventDefault();let f=new FormData(e.target);data.beds.push({id:Date.now(),name:f.get('name'),type:f.get('type'),history:[]});closeModal();save()}
+
+function openEditPlant(id){
+ const p=plant(id); if(!p)return;
+ openModal('野菜を編集',`<form class="form" onsubmit="editPlant(event,${id})">
+<label>野菜名<select name="name" required>${defaultCrops.map(n=>`<option ${n===p.name?'selected':''}>${esc(n)}</option>`).join('')}<option value="__other">その他</option></select></label>
+<label>品種<input name="variety" value="${esc(p.variety||'')}"></label>
+<label>場所<input name="place" value="${esc(p.place||'')}"></label>
+<label>区画<select name="bedId"><option value="">未設定</option>${data.beds.map(b=>`<option value="${b.id}" ${Number(p.bedId)===Number(b.id)?'selected':''}>${esc(b.name)}</option>`).join('')}</select></label>
+<label>植え付け日<input name="date" type="date" value="${esc(p.date||today())}"></label>
+<button class="primary">保存する</button></form>`);
+}
+function editPlant(e,id){
+ e.preventDefault(); const p=plant(id); if(!p)return; const oldBed=bed(p.bedId); const f=new FormData(e.target); let name=f.get('name'); if(name==='__other')name=prompt('野菜名を入力してください',p.name)||p.name; const ci=cropInfo(name); const newBedId=f.get('bedId')?Number(f.get('bedId')):null;
+ if(oldBed && p.bedId!==newBedId){oldBed.history=(oldBed.history||[]).filter(h=>!(h.crop===p.name && Number(h.year)===Number((p.date||'').slice(0,4))));}
+ Object.assign(p,{name,variety:f.get('variety'),place:f.get('place'),date:f.get('date'),bedId:newBedId,emoji:ci.emoji});
+ if(newBedId){const b=bed(newBedId);b.history=b.history||[];const y=Number(f.get('date').slice(0,4));const existing=b.history.find(h=>Number(h.year)===y && h.crop===p.name);if(!existing)b.history.push({year:y,crop:name,family:ci.family});}
+ closeModal();save();
+}
+function deletePlant(id){
+ const p=plant(id); if(!p)return; if(!confirm(`「${p.name}」を削除しますか？\nこの野菜に紐づく栽培記録・作業も削除します。`))return;
+ data.plants=data.plants.filter(x=>x.id!==id); data.tasks=data.tasks.filter(x=>x.plantId!==id); data.records=data.records.filter(x=>x.plantId!==id);
+ data.beds.forEach(b=>{b.history=(b.history||[]).filter(h=>h.crop!==p.name);}); save();
+}
+function openEditBed(id){
+ const b=bed(id); if(!b)return;
+ openModal('区画を編集',`<form class="form" onsubmit="editBed(event,${id})">
+<label>区画名<input name="name" value="${esc(b.name)}" required></label>
+<label>種類<select name="type">${['地植え','プランター','鉢','その他'].map(t=>`<option ${t===b.type?'selected':''}>${t}</option>`).join('')}</select></label>
+<button class="primary">保存する</button></form>`);
+}
+function editBed(e,id){e.preventDefault();const b=bed(id);if(!b)return;const f=new FormData(e.target);b.name=f.get('name');b.type=f.get('type');data.plants.forEach(p=>{if(Number(p.bedId)===id)p.place=b.name;});closeModal();save();}
+function deleteBed(id){
+ const b=bed(id);if(!b)return;const used=data.plants.some(p=>Number(p.bedId)===id);if(used){if(!confirm(`「${b.name}」には登録中の野菜があります。\n区画を削除すると、その野菜の区画設定も解除されます。続けますか？`))return;}else if(!confirm(`「${b.name}」を削除しますか？`))return;
+ data.plants.forEach(p=>{if(Number(p.bedId)===id)p.bedId=null;});data.beds=data.beds.filter(x=>x.id!==id);save();
+}
 function openTask(){openModal('作業を追加',`<form class="form" onsubmit="addTask(event)">
 <label>作業内容<input name="title" placeholder="例：トマトに追肥" required></label>
 <label>対象<select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
