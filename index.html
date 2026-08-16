@@ -4,71 +4,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2f7d32">
+<meta name="description" content="家庭菜園の栽培・天気・連作をまとめて管理するアプリ">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>家庭菜園ノート</title>
 <style>
-:root{--green:#2f7d32;--green2:#e8f5e9;--ink:#263238;--muted:#78909c;--bg:#f6f8f5;--card:#fff;--line:#e3e9e3;--orange:#ef8f2f}
+:root{--green:#2f7d32;--green2:#e8f5e9;--ink:#263238;--muted:#71808a;--bg:#f5f7f3;--card:#fff;--line:#e1e7e1;--orange:#e68a2e;--blue:#4e83c2;--red:#c95a5a}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
-.app{max-width:720px;margin:auto;min-height:100vh;padding-bottom:84px}
-header{padding:24px 18px 12px;background:linear-gradient(135deg,#2f7d32,#5da85e);color:#fff}
-header h1{margin:0;font-size:25px}header p{margin:5px 0 0;opacity:.9;font-size:13px}
-main{padding:16px}.section-title{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 10px}.section-title h2{font-size:17px;margin:0}.link{border:0;background:none;color:var(--green);font-weight:700}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 3px 12px #00000008}.stat{padding:13px}.stat b{font-size:23px;display:block}.stat span{font-size:12px;color:var(--muted)}
-.tasks{display:grid;gap:10px}.task{display:flex;gap:12px;align-items:center;padding:13px}.task .dot{width:11px;height:11px;border-radius:50%;background:var(--orange);flex:none}.task small{display:block;color:var(--muted);margin-top:3px}
-.plants{display:grid;gap:10px}.plant{padding:14px;display:flex;gap:13px;align-items:center}.plant .emoji{font-size:36px;width:48px;text-align:center}.plant h3{margin:0 0 3px;font-size:16px}.plant p{margin:0;color:var(--muted);font-size:12px}
-button,.btn{font:inherit;cursor:pointer}.primary{border:0;background:var(--green);color:white;padding:11px 15px;border-radius:12px;font-weight:700}.secondary{border:1px solid var(--line);background:white;padding:10px 14px;border-radius:12px}
-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(720px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-top:1px solid var(--line);padding:8px 8px max(8px,env(safe-area-inset-bottom));z-index:5}
-nav button{border:0;background:none;color:var(--muted);font-size:11px;padding:7px}nav button.active{color:var(--green);font-weight:800}nav .ico{font-size:20px;display:block}
-.view{display:none}.view.active{display:block}
-.form{display:grid;gap:12px}.form label{font-size:13px;font-weight:700}.form input,.form select,.form textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;font:inherit}.form textarea{min-height:100px}
-.modal{position:fixed;inset:0;background:#0006;display:none;align-items:end;z-index:10}.modal.open{display:flex}.sheet{background:#fff;width:100%;max-width:720px;margin:auto;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow:auto}.sheet-head{display:flex;justify-content:space-between;align-items:center}.sheet h2{margin:0 0 15px}.close{border:0;background:#eef2ee;border-radius:50%;width:34px;height:34px}
-.empty{text-align:center;color:var(--muted);padding:30px}.badge{display:inline-block;background:var(--green2);color:var(--green);padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:88px}header{padding:22px 18px 15px;background:linear-gradient(135deg,#2f7d32,#62a864);color:#fff}header h1{margin:0;font-size:24px}header p{margin:4px 0 0;font-size:13px;opacity:.9}
+main{padding:14px}.view{display:none}.view.active{display:block}.section-title{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px}.section-title h2{font-size:17px;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 3px 12px #00000008}.pad{padding:15px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{padding:13px}.stat b{font-size:23px;display:block}.stat span{font-size:11px;color:var(--muted)}
+button,.btn{font:inherit;cursor:pointer}.primary{border:0;background:var(--green);color:#fff;padding:10px 14px;border-radius:11px;font-weight:700}.secondary{border:1px solid var(--line);background:#fff;padding:9px 12px;border-radius:11px}.link{border:0;background:none;color:var(--green);font-weight:700}
+.weather-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.weather-now{display:flex;gap:12px;align-items:center}.weather-icon{font-size:38px}.weather-temp{font-size:28px;font-weight:800}.weather-meta{font-size:12px;color:var(--muted)}.weather-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:13px;overflow:auto}.day{padding:9px 6px;text-align:center;background:#f7faf7;border-radius:11px;font-size:11px}.day b{display:block;font-size:15px;margin:4px 0}.recommend{margin-top:11px;padding:12px;border-radius:12px;background:var(--green2)}.recommend strong{color:var(--green)}
+.tasks,.plants,.records,.beds{display:grid;gap:10px}.task,.plant,.record,.bed{padding:13px}.task{display:flex;gap:11px;align-items:center}.dot{width:10px;height:10px;border-radius:50%;background:var(--orange);flex:none}.task small,.plant p,.record small,.bed p{display:block;color:var(--muted);font-size:12px;margin:3px 0 0}
+.plant{display:flex;gap:12px;align-items:center}.emoji{font-size:34px;width:48px;text-align:center}.plant h3,.bed h3{margin:0;font-size:16px}.badge{display:inline-block;background:var(--green2);color:var(--green);padding:3px 7px;border-radius:999px;font-size:10px;font-weight:700}.warning{background:#fff3e6;color:#9b5a16}.danger{background:#fdecec;color:#9c3f3f}
+.bed{display:flex;justify-content:space-between;gap:12px}.bed .crop{font-size:26px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick{padding:14px;text-align:left}.quick b{display:block;margin-bottom:4px}.quick span{font-size:12px;color:var(--muted)}
+.form{display:grid;gap:12px}.form label{font-size:13px;font-weight:700}.form input,.form select,.form textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit}.form textarea{min-height:95px}.help{font-size:12px;color:var(--muted);line-height:1.5}
+.modal{position:fixed;inset:0;background:#0006;display:none;align-items:end;z-index:20}.modal.open{display:flex}.sheet{background:#fff;width:100%;max-width:760px;margin:auto;border-radius:20px 20px 0 0;padding:19px;max-height:92vh;overflow:auto}.sheet-head{display:flex;justify-content:space-between;align-items:center}.sheet h2{margin:0 0 14px}.close{border:0;background:#eef2ee;border-radius:50%;width:34px;height:34px;font-size:20px}
+.empty{text-align:center;color:var(--muted);padding:28px}.photo-preview{width:100%;max-height:260px;object-fit:contain;border-radius:12px;background:#f3f5f3}.result{padding:13px;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid var(--line);padding:7px 6px max(7px,env(safe-area-inset-bottom));z-index:10}nav button{border:0;background:none;color:var(--muted);font-size:10px;padding:5px}.ico{font-size:20px;display:block;margin-bottom:2px}nav button.active{color:var(--green);font-weight:800}
+footer{font-size:10px;color:var(--muted);padding:20px 4px;text-align:center}
+@media(max-width:430px){.weather-grid{grid-template-columns:repeat(5,72px)}.grid2{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:11px}.stat b{font-size:21px}}
 </style>
-<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));}</script>
 </head>
 <body>
 <div class="app">
-<header><h1>🌱 家庭菜園ノート</h1><p>今日の畑を、かんたんに記録。</p></header>
+<header><h1>🌱 家庭菜園ノート</h1><p>天気と栽培履歴から、今日の菜園をサポート</p></header>
 <main>
 <section id="home" class="view active">
-  <div class="section-title"><h2>今日のようす</h2><span class="badge" id="today"></span></div>
+  <div class="section-title"><h2>今日の菜園</h2><span class="badge" id="today"></span></div>
   <div class="stats">
-    <div class="stat"><b id="plantCount">0</b><span>育てている野菜</span></div>
-    <div class="stat"><b id="taskCount">0</b><span>今日の作業</span></div>
-    <div class="stat"><b id="harvestCount">0</b><span>収穫記録</span></div>
+    <div class="stat card"><b id="plantCount">0</b><span>栽培中</span></div>
+    <div class="stat card"><b id="taskCount">0</b><span>今日の作業</span></div>
+    <div class="stat card"><b id="bedCount">0</b><span>区画</span></div>
   </div>
+
+  <div class="section-title"><h2>☀️ 天気と水やり</h2><button class="secondary" onclick="refreshWeather()">更新</button></div>
+  <div id="weatherCard" class="card pad"><div class="empty">「現在地を取得」から天気を設定できます。</div></div>
+
+  <div class="section-title"><h2>💧 今日の水やり提案</h2></div>
+  <div id="waterAdvice" class="plants"></div>
+
+  <div class="section-title"><h2>すぐ使える機能</h2></div>
+  <div class="grid2">
+    <button class="quick card" onclick="openRecord()"><b>📝 栽培を記録</b><span>水やり・肥料・成長・収穫</span></button>
+    <button class="quick card" onclick="openPhoto()"><b>📷 写真から診断</b><span>肥料提案の準備画面</span></button>
+    <button class="quick card" onclick="show('rotation')"><b>🌿 次作を提案</b><span>連作を避けた作付け候補</span></button>
+    <button class="quick card" onclick="openPlant()"><b>🌱 野菜を追加</b><span>栽培場所・区画も登録</span></button>
+  </div>
+
   <div class="section-title"><h2>今日の作業</h2><button class="link" onclick="openTask()">＋追加</button></div>
   <div id="tasks" class="tasks"></div>
-  <div class="section-title"><h2>栽培中の野菜</h2><button class="link" onclick="show('plants')">すべて見る</button></div>
-  <div id="homePlants" class="plants"></div>
 </section>
 
 <section id="plants" class="view">
-  <div class="section-title"><h2>🌿 野菜一覧</h2><button class="primary" onclick="openPlant()">＋ 野菜を追加</button></div>
+  <div class="section-title"><h2>🌱 野菜</h2><button class="primary" onclick="openPlant()">＋追加</button></div>
   <div id="plantList" class="plants"></div>
 </section>
 
-<section id="records" class="view">
-  <div class="section-title"><h2>📝 栽培記録</h2><button class="primary" onclick="openRecord()">＋ 記録する</button></div>
-  <div id="recordList"></div>
+<section id="beds" class="view">
+  <div class="section-title"><h2>🗺️ 畑・プランター</h2><button class="primary" onclick="openBed()">＋区画追加</button></div>
+  <div id="bedList" class="beds"></div>
+  <p class="help">区画ごとの作付け履歴を残すと、次に植える野菜の提案精度が上がります。</p>
 </section>
 
-<section id="calendar" class="view">
-  <div class="section-title"><h2>📅 カレンダー</h2></div>
-  <div class="card" style="padding:18px">
-    <h3 style="margin-top:0">今月やること</h3>
-    <p style="color:var(--muted)">登録した作業をここにまとめて表示します。</p>
-    <div id="calendarTasks"></div>
-  </div>
+<section id="rotation" class="view">
+  <div class="section-title"><h2>🌿 次作の提案</h2><button class="secondary" onclick="renderRotation()">更新</button></div>
+  <div id="rotationList"></div>
+</section>
+
+<section id="records" class="view">
+  <div class="section-title"><h2>📝 栽培記録</h2><button class="primary" onclick="openRecord()">＋記録</button></div>
+  <div id="recordList" class="records"></div>
 </section>
 </main>
 <nav>
 <button class="active" onclick="show('home',this)"><span class="ico">🏠</span>ホーム</button>
 <button onclick="show('plants',this)"><span class="ico">🌱</span>野菜</button>
+<button onclick="show('beds',this)"><span class="ico">🗺️</span>区画</button>
+<button onclick="show('rotation',this)"><span class="ico">🔄</span>次作</button>
 <button onclick="show('records',this)"><span class="ico">📝</span>記録</button>
-<button onclick="show('calendar',this)"><span class="ico">📅</span>予定</button>
 </nav>
+<footer>天気データ：Open-Meteo。水やり・連作の提案は栽培判断の補助情報です。</footer>
 </div>
 
 <div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet">
@@ -76,66 +94,228 @@ nav button{border:0;background:none;color:var(--muted);font-size:11px;padding:7p
 <div id="modalBody"></div></div></div>
 
 <script>
-const KEY='garden-note-v1';
-let data=JSON.parse(localStorage.getItem(KEY)||'null')||{
+const KEY='garden-note-v2';
+const cropDB={
+ 'トマト':{family:'ナス科',water:'多め',emoji:'🍅',fert:'果菜類用'},
+ 'ミニトマト':{family:'ナス科',water:'多め',emoji:'🍅',fert:'果菜類用'},
+ 'ナス':{family:'ナス科',water:'多め',emoji:'🍆',fert:'果菜類用'},
+ 'ピーマン':{family:'ナス科',water:'多め',emoji:'🫑',fert:'果菜類用'},
+ 'じゃがいも':{family:'ナス科',water:'普通',emoji:'🥔',fert:'いも類用'},
+ 'きゅうり':{family:'ウリ科',water:'多め',emoji:'🥒',fert:'果菜類用'},
+ 'かぼちゃ':{family:'ウリ科',water:'普通',emoji:'🎃',fert:'果菜類用'},
+ 'ズッキーニ':{family:'ウリ科',water:'多め',emoji:'🥒',fert:'果菜類用'},
+ 'えだまめ':{family:'マメ科',water:'普通',emoji:'🫘',fert:'豆類用'},
+ 'インゲン':{family:'マメ科',water:'普通',emoji:'🫘',fert:'豆類用'},
+ 'とうもろこし':{family:'イネ科',water:'普通',emoji:'🌽',fert:'野菜用'},
+ 'キャベツ':{family:'アブラナ科',water:'普通',emoji:'🥬',fert:'葉菜類用'},
+ 'ブロッコリー':{family:'アブラナ科',water:'普通',emoji:'🥦',fert:'葉菜類用'},
+ 'だいこん':{family:'アブラナ科',water:'普通',emoji:'🥕',fert:'根菜類用'},
+ 'こまつな':{family:'アブラナ科',water:'普通',emoji:'🥬',fert:'葉菜類用'},
+ 'レタス':{family:'キク科',water:'普通',emoji:'🥬',fert:'葉菜類用'},
+ 'ほうれん草':{family:'ヒユ科',water:'普通',emoji:'🥬',fert:'葉菜類用'},
+ 'にんじん':{family:'セリ科',water:'普通',emoji:'🥕',fert:'根菜類用'},
+ 'たまねぎ':{family:'ヒガンバナ科',water:'少なめ',emoji:'🧅',fert:'根菜類用'},
+ 'にんにく':{family:'ヒガンバナ科',water:'少なめ',emoji:'🧄',fert:'根菜類用'},
+ 'さつまいも':{family:'ヒルガオ科',water:'少なめ',emoji:'🍠',fert:'いも類用'},
+ 'バジル':{family:'シソ科',water:'普通',emoji:'🌿',fert:'ハーブ用'},
+ 'しそ':{family:'シソ科',water:'普通',emoji:'🌿',fert:'葉菜類用'}
+};
+const defaultCrops=Object.keys(cropDB);
+const defaultData={
+ settings:{lat:null,lon:null,locationName:'未設定',aiEndpoint:''},
  plants:[
-  {id:1,name:'ミニトマト',variety:'アイコ',place:'ベランダ1号',emoji:'🍅',date:'2026-05-10'},
-  {id:2,name:'バジル',variety:'スイートバジル',place:'プランターA',emoji:'🌿',date:'2026-05-25'}
+  {id:1,name:'ミニトマト',variety:'アイコ',place:'ベランダ1号',emoji:'🍅',date:'2026-05-10',bedId:1},
+  {id:2,name:'バジル',variety:'スイートバジル',place:'プランターA',emoji:'🌿',date:'2026-05-25',bedId:2}
  ],
- tasks:[
-  {id:1,title:'ミニトマトに水やり',date:'2026-08-15',plantId:1},
-  {id:2,title:'バジルを収穫',date:'2026-08-15',plantId:2}
+ beds:[
+  {id:1,name:'ベランダ1号',type:'プランター',history:[{year:2026,crop:'ミニトマト',family:'ナス科'}]},
+  {id:2,name:'プランターA',type:'プランター',history:[{year:2026,crop:'バジル',family:'シソ科'}]}
  ],
+ tasks:[],
  records:[
   {id:1,date:'2026-08-14',plantId:1,type:'成長',text:'実が5個ついてきた。背丈は約80cm。'},
   {id:2,date:'2026-08-12',plantId:2,type:'水やり',text:'朝たっぷり水やり。'}
  ],
- harvests:[]
+ weather:null
 };
-function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
-function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function plant(id){return data.plants.find(x=>x.id==id)}
-function fmt(d){return new Date(d+'T00:00:00').toLocaleDateString('ja-JP',{month:'long',day:'numeric'})}
-function render(){
- const today=new Date().toISOString().slice(0,10);
- document.getElementById('today').textContent=fmt(today);
- document.getElementById('plantCount').textContent=data.plants.length;
- document.getElementById('taskCount').textContent=data.tasks.filter(x=>x.date===today).length;
- document.getElementById('harvestCount').textContent=data.harvests.length;
- const tasks=data.tasks.filter(x=>x.date===today);
- document.getElementById('tasks').innerHTML=tasks.length?tasks.map(t=>`<div class="task card"><span class="dot"></span><div><b>${esc(t.title)}</b><small>${esc(plant(t.plantId)?.name||'')}</small></div><button class="secondary" style="margin-left:auto" onclick="doneTask(${t.id})">完了</button></div>`).join(''):'<div class="empty card">今日の作業はありません 🎉</div>';
- const cards=data.plants.map(p=>`<div class="plant card"><div class="emoji">${p.emoji}</div><div><h3>${esc(p.name)} <span class="badge">${esc(p.variety)}</span></h3><p>${esc(p.place)} ・ ${fmt(p.date)}から栽培</p></div></div>`);
- document.getElementById('homePlants').innerHTML=cards.slice(0,3).join('')||'<div class="empty">まだ野菜が登録されていません。</div>';
- document.getElementById('plantList').innerHTML=cards.join('')||'<div class="empty card">「野菜を追加」から登録できます。</div>';
- document.getElementById('recordList').innerHTML=data.records.length?data.records.slice().reverse().map(r=>{let p=plant(r.plantId);return `<div class="card" style="padding:15px;margin-bottom:10px"><div><span class="badge">${esc(r.type)}</span> <small style="color:var(--muted)">${fmt(r.date)}</small></div><h3 style="margin:8px 0 4px">${esc(p?.emoji||'🌱')} ${esc(p?.name||'')}</h3><p style="margin:0">${esc(r.text)}</p></div>`}).join(''):'<div class="empty card">まだ記録がありません。</div>';
- document.getElementById('calendarTasks').innerHTML=data.tasks.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><b>${fmt(t.date)}</b>　${esc(t.title)}</div>`).join('')||'<p>予定はありません。</p>';
+let data=loadData();
+let weatherLoading=false;
+
+function loadData(){
+ let d=JSON.parse(localStorage.getItem(KEY)||'null');
+ if(d)return d;
+ const old=JSON.parse(localStorage.getItem('garden-note-v1')||'null');
+ if(old){
+  const beds=(old.plants||[]).map((p,i)=>({id:i+1,name:p.place||`区画${i+1}`,type:'プランター',history:[{year:Number((p.date||'2026').slice(0,4)),crop:p.name,family:(cropDB[p.name]||{}).family||'不明'}]}));
+  const plants=(old.plants||[]).map((p,i)=>({...p,bedId:beds[i]?.id||null}));
+  return {settings:{lat:null,lon:null,locationName:'未設定',aiEndpoint:''},plants,beds,tasks:old.tasks||[],records:old.records||[],weather:null};
+ }
+ return structuredClone(defaultData);
 }
-function show(id,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');if(btn){document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}else{document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.textContent.includes(id==='plants'?'野菜':id==='records'?'記録':id==='calendar'?'予定':'ホーム')))}}
-function open(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').classList.add('open')}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));renderAll()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function plant(id){return data.plants.find(x=>x.id==id)}
+function bed(id){return data.beds.find(x=>x.id==id)}
+function cropInfo(name){return cropDB[name]||{family:'その他',water:'普通',emoji:'🌱',fert:'野菜用'}}
+function today(){return new Date().toISOString().slice(0,10)}
+function fmt(d){return new Date(d+'T00:00:00').toLocaleDateString('ja-JP',{month:'long',day:'numeric'})}
+function daysSince(date){if(!date)return 99;return Math.floor((new Date(today())-new Date(date+'T00:00:00'))/86400000)}
+function lastWater(p){let rs=data.records.filter(r=>r.plantId==p.id&&r.type==='水やり').sort((a,b)=>b.date.localeCompare(a.date));return rs[0]?.date||null}
+function show(id,btn){
+ document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ if(btn)btn.classList.add('active');else{const map={home:'ホーム',plants:'野菜',beds:'区画',rotation:'次作',records:'記録'};document.querySelectorAll('nav button').forEach(b=>{if(b.textContent.includes(map[id]))b.classList.add('active')})}
+ if(id==='rotation')renderRotation();
+}
+function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').classList.add('open')}
 function closeModal(){document.getElementById('modal').classList.remove('open')}
-function openPlant(){open('野菜を追加',`<form class="form" onsubmit="addPlant(event)">
-<label>野菜名<input name="name" placeholder="例：ミニトマト" required></label>
+function renderAll(){
+ document.getElementById('today').textContent=fmt(today());
+ document.getElementById('plantCount').textContent=data.plants.length;
+ document.getElementById('taskCount').textContent=data.tasks.filter(t=>t.date===today()).length;
+ document.getElementById('bedCount').textContent=data.beds.length;
+ renderTasks();renderPlants();renderBeds();renderRecords();renderRotation();renderWaterAdvice();renderWeather();
+}
+function renderTasks(){
+ const ts=data.tasks.filter(t=>t.date===today());
+ document.getElementById('tasks').innerHTML=ts.length?ts.map(t=>`<div class="task card"><span class="dot"></span><div><b>${esc(t.title)}</b><small>${esc(plant(t.plantId)?.name||'')}</small></div><button class="secondary" style="margin-left:auto" onclick="doneTask(${t.id})">完了</button></div>`).join(''):'<div class="empty card">今日の作業はありません 🎉</div>';
+}
+function renderPlants(){
+ const html=data.plants.map(p=>{let c=cropInfo(p.name),b=bed(p.bedId);return `<div class="plant card"><div class="emoji">${esc(p.emoji||c.emoji)}</div><div><h3>${esc(p.name)} ${p.variety?`<span class="badge">${esc(p.variety)}</span>`:''}</h3><p>${esc(b?.name||p.place||'区画未設定')} ・ ${fmt(p.date)}から</p></div></div>`}).join('');
+ document.getElementById('plantList').innerHTML=html||'<div class="empty card">まだ野菜がありません。</div>';
+}
+function renderBeds(){
+ document.getElementById('bedList').innerHTML=data.beds.length?data.beds.map(b=>{let latest=(b.history||[]).slice().sort((a,c)=>c.year-a.year)[0];let ci=latest?cropInfo(latest.crop):null;return `<div class="bed card"><div><h3>${esc(b.name)}</h3><p>${esc(b.type)} ・ 最新作付け：${latest?esc(latest.crop):'なし'} ${latest?`(${latest.year})`:''}</p></div><div class="crop">${ci?.emoji||'🪴'}</div></div>`}).join(''):'<div class="empty card">区画を追加すると連作管理ができます。</div>';
+}
+function renderRecords(){
+ document.getElementById('recordList').innerHTML=data.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>{let p=plant(r.plantId);return `<div class="record card"><span class="badge">${esc(r.type)}</span> <small>${fmt(r.date)}</small><h3 style="margin:7px 0 4px">${esc(p?.emoji||'🌱')} ${esc(p?.name||'')}</h3><div>${esc(r.text||'')}</div></div>`}).join('')||'<div class="empty card">まだ記録がありません。</div>';
+}
+function openPlant(){
+ openModal('野菜を追加',`<form class="form" onsubmit="addPlant(event)">
+<label>野菜名<select name="name" required>${defaultCrops.map(n=>`<option>${esc(n)}</option>`).join('')}<option value="__other">その他</option></select></label>
 <label>品種<input name="variety" placeholder="例：アイコ"></label>
-<label>場所<input name="place" placeholder="例：ベランダ1号"></label>
-<label>絵文字<input name="emoji" value="🌱" maxlength="2"></label>
-<label>植え付け日<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
+<label>場所<input name="place" placeholder="例：ベランダ"></label>
+<label>区画<select name="bedId"><option value="">未設定</option>${data.beds.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></label>
+<label>植え付け日<input name="date" type="date" value="${today()}"></label>
 <button class="primary">登録する</button></form>`)}
-function addPlant(e){e.preventDefault();let f=new FormData(e.target);data.plants.push({id:Date.now(),name:f.get('name'),variety:f.get('variety'),place:f.get('place'),emoji:f.get('emoji')||'🌱',date:f.get('date')});closeModal();save()}
-function openTask(){open('作業を追加',`<form class="form" onsubmit="addTask(event)">
+function addPlant(e){
+ e.preventDefault();let f=new FormData(e.target);let name=f.get('name');if(name==='__other')name=prompt('野菜名を入力してください')||'その他';
+ let ci=cropInfo(name);let bid=f.get('bedId')?Number(f.get('bedId')):null;
+ data.plants.push({id:Date.now(),name,variety:f.get('variety'),place:f.get('place'),emoji:ci.emoji,date:f.get('date'),bedId:bid});
+ if(bid){let b=bed(bid);b.history=b.history||[];let y=Number(f.get('date').slice(0,4));b.history.push({year:y,crop:name,family:ci.family})}
+ closeModal();save();
+}
+function openBed(){openModal('区画を追加',`<form class="form" onsubmit="addBed(event)">
+<label>区画名<input name="name" placeholder="例：畝A" required></label>
+<label>種類<select name="type"><option>地植え</option><option>プランター</option><option>鉢</option><option>その他</option></select></label>
+<button class="primary">登録する</button></form>`)}
+function addBed(e){e.preventDefault();let f=new FormData(e.target);data.beds.push({id:Date.now(),name:f.get('name'),type:f.get('type'),history:[]});closeModal();save()}
+function openTask(){openModal('作業を追加',`<form class="form" onsubmit="addTask(event)">
 <label>作業内容<input name="title" placeholder="例：トマトに追肥" required></label>
-<label>対象<input name="plantId" type="hidden"><select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
-<label>日付<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
+<label>対象<select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
+<label>日付<input name="date" type="date" value="${today()}"></label>
 <button class="primary">登録する</button></form>`)}
 function addTask(e){e.preventDefault();let f=new FormData(e.target);data.tasks.push({id:Date.now(),title:f.get('title'),date:f.get('date'),plantId:Number(f.get('pid'))});closeModal();save()}
 function doneTask(id){data.tasks=data.tasks.filter(t=>t.id!==id);save()}
-function openRecord(){open('栽培記録',`<form class="form" onsubmit="addRecord(event)">
+function openRecord(){openModal('栽培記録',`<form class="form" onsubmit="addRecord(event)">
 <label>野菜<select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
-<label>種類<select name="type"><option>成長</option><option>水やり</option><option>肥料</option><option>病害虫</option><option>剪定</option><option>収穫</option></select></label>
-<label>日付<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
-<label>メモ<textarea name="text" placeholder="今日のようすを記録"></textarea></label>
+<label>種類<select name="type"><option>水やり</option><option>肥料</option><option>成長</option><option>病害虫</option><option>剪定</option><option>収穫</option></select></label>
+<label>日付<input name="date" type="date" value="${today()}"></label>
+<label>メモ<textarea name="text" placeholder="作業・状態を記録"></textarea></label>
 <button class="primary">記録する</button></form>`)}
-function addRecord(e){e.preventDefault();let f=new FormData(e.target);let type=f.get('type');data.records.push({id:Date.now(),date:f.get('date'),plantId:Number(f.get('pid')),type,text:f.get('text')});if(type==='収穫')data.harvests.push({id:Date.now(),date:f.get('date'),plantId:Number(f.get('pid'))});closeModal();save()}
-render();
+function addRecord(e){e.preventDefault();let f=new FormData(e.target);data.records.push({id:Date.now(),date:f.get('date'),plantId:Number(f.get('pid')),type:f.get('type'),text:f.get('text')});closeModal();save()}
+function openLocation(){openModal('天気の場所',`<div class="form">
+<p class="help">位置情報を許可すると、現在地の天気を取得します。位置情報はこの端末のブラウザ内に保存します。</p>
+<button class="primary" onclick="getLocation()">📍 現在地を取得</button>
+<label>場所名<input id="locName" value="${esc(data.settings.locationName||'')}" placeholder="例：東京都"></label>
+<label>緯度<input id="lat" type="number" step="any" value="${data.settings.lat??''}"></label>
+<label>経度<input id="lon" type="number" step="any" value="${data.settings.lon??''}"></label>
+<button class="secondary" onclick="saveLocation()">保存して天気を取得</button></div>`)}
+function getLocation(){
+ if(!navigator.geolocation)return alert('このブラウザでは位置情報が利用できません。');
+ navigator.geolocation.getCurrentPosition(pos=>{document.getElementById('lat').value=pos.coords.latitude.toFixed(6);document.getElementById('lon').value=pos.coords.longitude.toFixed(6);document.getElementById('locName').value='現在地';},()=>alert('位置情報を取得できませんでした。ブラウザの位置情報許可を確認してください。'),{enableHighAccuracy:true,timeout:10000});
+}
+function saveLocation(){data.settings.lat=Number(document.getElementById('lat').value);data.settings.lon=Number(document.getElementById('lon').value);data.settings.locationName=document.getElementById('locName').value||'設定地点';closeModal();save();refreshWeather()}
+async function refreshWeather(){
+ if(weatherLoading)return;weatherLoading=true;
+ if(!data.settings.lat||!data.settings.lon){openLocation();weatherLoading=false;return}
+ const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(data.settings.lat)}&longitude=${encodeURIComponent(data.settings.lon)}&timezone=auto&forecast_days=5&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,et0_fao_evapotranspiration`;
+ try{const r=await fetch(url);if(!r.ok)throw new Error('weather');data.weather=await r.json();save();}catch(e){alert('天気を取得できませんでした。通信状況を確認してください。')}finally{weatherLoading=false}
+}
+function weatherIcon(code){if(code===0)return'☀️';if(code<=3)return'🌤️';if(code<=48)return'🌫️';if(code<=67)return'🌧️';if(code<=77)return'❄️';if(code<=82)return'🌦️';return'⛈️'}
+function renderWeather(){
+ const el=document.getElementById('weatherCard'),w=data.weather;
+ if(!w){el.innerHTML=`<div class="weather-head"><div><b>天気を設定すると水やり提案が出ます</b><div class="weather-meta">場所：${esc(data.settings.locationName||'未設定')}</div></div><button class="primary" onclick="openLocation()">📍 設定</button></div>`;return}
+ const d=w.daily;let todayIndex=0;
+ const days=d.time.map((date,i)=>`<div class="day"><span>${new Date(date+'T00:00:00').toLocaleDateString('ja-JP',{weekday:'short'})}</span><div>${weatherIcon(d.weather_code[i])}</div><b>${Math.round(d.temperature_2m_max[i])}°</b><span>☔${Math.round(d.precipitation_probability_max[i]||0)}%</span></div>`).join('');
+ el.innerHTML=`<div class="weather-head"><div class="weather-now"><div class="weather-icon">${weatherIcon(d.weather_code[0])}</div><div><div class="weather-temp">${Math.round(d.temperature_2m_max[0])}°</div><div class="weather-meta">${esc(data.settings.locationName)} ・ 降水${Number(d.precipitation_sum[0]||0).toFixed(1)}mm ・ ET₀ ${Number(d.et0_fao_evapotranspiration[0]||0).toFixed(1)}mm</div></div></div><button class="secondary" onclick="openLocation()">場所</button></div><div class="weather-grid">${days}</div><div class="recommend"><strong>水やり判定は天気・気温・ET₀・栽培場所・前回水やりを組み合わせます。</strong></div>`;
+}
+function waterScore(p){
+ const c=cropInfo(p.name),w=data.weather?.daily;
+ let last=lastWater(p),days=daysSince(last),score=days;
+ if(c.water==='多め')score+=1;if(c.water==='少なめ')score-=1;
+ if((p.place||'').includes('プランター')||(bed(p.bedId)?.type==='プランター'))score+=1;
+ if(w){const rain=Number(w.precipitation_sum[0]||0),prob=Number(w.precipitation_probability_max[0]||0),t=Number(w.temperature_2m_max[0]||0),et=Number(w.et0_fao_evapotranspiration[0]||0);
+  if(rain>=8)score-=4;else if(rain>=3)score-=2;
+  if(prob>=70)score-=1;if(t>=32)score+=1;if(et>=5)score+=1;if(et>=7)score+=1;
+ }
+ return {score,last,days};
+}
+function renderWaterAdvice(){
+ const el=document.getElementById('waterAdvice');
+ if(!data.plants.length){el.innerHTML='<div class="empty card">野菜を登録してください。</div>';return}
+ el.innerHTML=data.plants.map(p=>{const s=waterScore(p),c=cropInfo(p.name),w=data.weather?.daily;
+  let title,reason,cls='';
+  if(w&&Number(w.precipitation_sum[0]||0)>=8){title='今日は水やり不要の可能性が高い';reason=`予想降水量 ${Number(w.precipitation_sum[0]).toFixed(1)}mm。土が湿っている場合は控えめに。`;cls='warning'}
+  else if(s.score>=3){title='💧 朝の水やりがおすすめ';reason=`前回${s.last?fmt(s.last):'記録なし'}。${w?`最高${Math.round(w.temperature_2m_max[0])}℃・ET₀ ${Number(w.et0_fao_evapotranspiration[0]||0).toFixed(1)}mm。`:''}`}
+  else if(s.score>=1){title='土の表面を確認して判断';reason=`前回${s.last?fmt(s.last):'記録なし'}。葉がしおれていなければ、土の乾き具合を確認。`}
+  else{title='今日は控えめでOK';reason=`前回${s.last?fmt(s.last):'記録なし'}。過湿に注意。`}
+  return `<div class="card pad ${cls}"><b>${esc(c.emoji)} ${esc(p.name)}　${title}</b><p style="margin:6px 0 0">${esc(reason)}</p><small class="help">※これは目安です。鉢・土・日当たりで変わります。</small></div>`
+ }).join('');
+}
+function renderRotation(){
+ const el=document.getElementById('rotationList');
+ if(!data.beds.length){el.innerHTML='<div class="empty card">まず区画を登録してください。</div>';return}
+ el.innerHTML=data.beds.map(b=>{
+  const hist=(b.history||[]).slice().sort((a,c)=>c.year-a.year);const recent=hist.slice(0,3).map(x=>x.family).filter(Boolean);
+  const latest=hist[0];
+  const candidates=defaultCrops.map(name=>{const ci=cropInfo(name);let score=50;if(recent.includes(ci.family))score-=35;if(latest&&ci.family===latest.family)score-=20;if(!recent.includes(ci.family))score+=20;if(ci.family==='マメ科'&&!recent.includes(ci.family))score+=5;return {name,ci,score}}).filter(x=>!latest||x.name!==latest.crop).sort((a,c)=>c.score-a.score).slice(0,4);
+  return `<div class="card pad" style="margin-bottom:12px"><div><b>🗺️ ${esc(b.name)}</b><div class="help">最近：${hist.length?hist.map(h=>`${h.year} ${esc(h.crop)}（${esc(h.family)}）`).join(' → '):'作付け履歴なし'}</div></div><h3 style="margin:13px 0 7px">次におすすめ</h3>${candidates.map((x,i)=>`<div class="result"><b>${i+1}. ${x.ci.emoji} ${esc(x.name)}</b> <span class="badge">${esc(x.ci.family)}</span><p style="margin:6px 0 0;font-size:12px">${recent.includes(x.ci.family)?'直近の同科作付けがあるため注意。':'直近の履歴と科が重なりにくい候補。'}</p></div>`).join('')}<p class="help" style="margin-bottom:0">※連作回避は目安です。品種・土壌・病害履歴によって必要な輪作年数は異なります。</p></div>`
+ }).join('');
+}
+function openPhoto(){
+ openModal('📷 写真から肥料提案',`<div class="form">
+<p class="help">写真＋栽培履歴を安全なバックエンドへ送り、肥料候補・頻度・確認事項を提案します。APIキーはこの画面には保存しません。</p>
+<label>AI診断エンドポイント（任意）<input id="aiEndpoint" type="url" value="${esc(data.settings.aiEndpoint||'')}" placeholder="https://xxxxx.workers.dev/diagnose"></label>
+<label>植物<select id="photoPlant">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
+<input id="photoInput" type="file" accept="image/*" capture="environment" onchange="previewPhoto(event)">
+<div id="photoArea"></div>
+<button class="primary" onclick="prepareDiagnosis()">診断を準備する</button>
+<div id="diagnosis"></div></div>`)
+}
+function previewPhoto(e){const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);document.getElementById('photoArea').innerHTML=`<img class="photo-preview" src="${url}" alt="植物写真">`}
+async function prepareDiagnosis(){
+ const p=plant(Number(document.getElementById('photoPlant').value));const c=cropInfo(p?.name||'');
+ const endpoint=(document.getElementById('aiEndpoint').value||'').trim();
+ data.settings.aiEndpoint=endpoint;localStorage.setItem(KEY,JSON.stringify(data));
+ const file=document.getElementById('photoInput').files[0];
+ if(!file){document.getElementById('diagnosis').innerHTML='<div class="result">写真を選択してください。</div>';return}
+ if(!endpoint){
+  document.getElementById('diagnosis').innerHTML=`<div class="result"><b>AI診断の準備ができました</b><p>対象：${esc(p?.name||'')} / 基本肥料候補：${esc(c.fert)}</p><p class="help">AI診断を有効にするには、安全なバックエンドのURLを入力します。下のWorker一式を使えば設定できます。</p></div>`;
+  return;
+ }
+ const out=document.getElementById('diagnosis');out.innerHTML='<div class="result">🔎 写真を分析しています…</div>';
+ try{
+  const imageData=await fileToDataURL(file);
+  const context={plant:p?.name||'',variety:p?.variety||'',lastFertilizer:(data.records.filter(r=>r.plantId==p?.id&&r.type==='肥料').sort((a,b)=>b.date.localeCompare(a.date))[0]?.date)||null,lastWater:lastWater(p),notes:data.records.filter(r=>r.plantId==p?.id).slice(-5).map(r=>({date:r.date,type:r.type,text:r.text}))};
+  const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:imageData,context})});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  out.innerHTML=`<div class="result"><b>🌿 AIからの提案</b><p style="white-space:pre-wrap">${esc(j.text||j.output||'結果がありません')}</p><p class="help">※写真だけで肥料不足を断定せず、製品ラベルの使用量・頻度を優先してください。</p></div>`;
+ }catch(e){out.innerHTML=`<div class="result"><b>診断に失敗しました</b><p class="help">${esc(e.message)}</p><p class="help">エンドポイントURL、通信、Workerの設定を確認してください。</p></div>`}
+}
+function fileToDataURL(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
+renderAll();
 </script>
 </body>
 </html>

@@ -1,10 +1,11 @@
 {
   "name": "家庭菜園ノート",
   "short_name": "菜園ノート",
-  "description": "家庭菜園の野菜・作業・栽培記録・収穫を管理するアプリ",
+  "description": "天気・栽培履歴・連作を管理する家庭菜園アプリ",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f8f5",
+  "background_color": "#f5f7f3",
   "theme_color": "#2f7d32",
   "lang": "ja",
   "icons": [
