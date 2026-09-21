@@ -63,6 +63,8 @@ footer{font-size:10px;color:var(--muted);padding:20px 4px;text-align:center}
 <section id="plants" class="view">
   <div class="section-title"><h2>🌱 野菜</h2><button class="primary" onclick="openPlant()">＋追加</button></div>
   <div id="plantList" class="plants"></div>
+  <div class="section-title"><h2>📚 栽培終了の履歴</h2></div>
+  <div id="endedPlantList" class="plants"></div>
 </section>
 
 <section id="beds" class="view">
@@ -150,7 +152,7 @@ function loadData(){
  const old=JSON.parse(localStorage.getItem('garden-note-v1')||'null');
  if(old){
   const beds=(old.plants||[]).map((p,i)=>({id:i+1,name:p.place||`区画${i+1}`,type:'プランター',history:[{year:Number((p.date||'2026').slice(0,4)),crop:p.name,family:(cropDB[p.name]||{}).family||'不明'}]}));
-  const plants=(old.plants||[]).map((p,i)=>({...p,bedId:beds[i]?.id||null}));
+  const plants=(old.plants||[]).map((p,i)=>({...p,bedId:beds[i]?.id||null,ended:!!p.ended,endDate:p.endDate||null}));
   return {settings:{lat:null,lon:null,locationName:'未設定',aiEndpoint:''},plants,beds,tasks:old.tasks||[],records:old.records||[],weather:null,weatherUpdatedAt:null};
  }
  return structuredClone(defaultData);
@@ -174,18 +176,23 @@ function openModal(title,body){document.getElementById('modalTitle').textContent
 function closeModal(){document.getElementById('modal').classList.remove('open')}
 function renderAll(){
  document.getElementById('today').textContent=fmt(today());
- document.getElementById('plantCount').textContent=data.plants.length;
+ document.getElementById('plantCount').textContent=data.plants.filter(p=>!p.ended).length;
  document.getElementById('taskCount').textContent=data.tasks.filter(t=>t.date===today()).length;
  document.getElementById('bedCount').textContent=data.beds.length;
  renderTasks();renderPlants();renderBeds();renderRecords();renderRotation();renderWaterAdvice();renderWeather();
 }
 function renderTasks(){
- const ts=data.tasks.filter(t=>t.date===today());
+ const ts=data.tasks.filter(t=>t.date===today() && !plant(t.plantId)?.ended);
  document.getElementById('tasks').innerHTML=ts.length?ts.map(t=>`<div class="task card"><span class="dot"></span><div><b>${esc(t.title)}</b><small>${esc(plant(t.plantId)?.name||'')}</small></div><button class="secondary" style="margin-left:auto" onclick="doneTask(${t.id})">完了</button></div>`).join(''):'<div class="empty card">今日の作業はありません 🎉</div>';
 }
 function renderPlants(){
- const html=data.plants.map(p=>{let c=cropInfo(p.name),b=bed(p.bedId);return `<div class="plant card"><div class="emoji">${esc(p.emoji||c.emoji)}</div><div style="flex:1"><h3>${esc(p.name)} ${p.variety?`<span class="badge">${esc(p.variety)}</span>`:''}</h3><p>${esc(b?.name||p.place||'区画未設定')} ・ ${fmt(p.date)}から</p></div><div style="display:flex;gap:6px"><button class="secondary" onclick="openEditPlant(${p.id})">編集</button><button class="secondary danger-btn" onclick="deletePlant(${p.id})">削除</button></div></div>`}).join('');
- document.getElementById('plantList').innerHTML=html||'<div class="empty card">まだ野菜がありません。</div>';
+  const active=data.plants.filter(p=>!p.ended);
+  const ended=data.plants.filter(p=>p.ended).slice().sort((a,b)=>(b.endDate||'').localeCompare(a.endDate||''));
+  const html=active.map(p=>{let c=cropInfo(p.name),b=bed(p.bedId);return `<div class="plant card"><div class="emoji">${esc(p.emoji||c.emoji)}</div><div style="flex:1"><h3>${esc(p.name)} ${p.variety?`<span class="badge">${esc(p.variety)}</span>`:''}</h3><p>${esc(b?.name||p.place||'区画未設定')} ・ ${fmt(p.date)}から</p></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="secondary" onclick="openEditPlant(${p.id})">編集</button><button class="secondary" onclick="finishPlant(${p.id})">🌿 抜いて終了</button><button class="secondary danger-btn" onclick="deletePlant(${p.id})">削除</button></div></div>`}).join('');
+  document.getElementById('plantList').innerHTML=html||'<div class="empty card">現在、栽培中の野菜はありません。</div>';
+
+  const endedHtml=ended.map(p=>{let c=cropInfo(p.name),b=bed(p.bedId);return `<div class="plant card"><div class="emoji">${esc(p.emoji||c.emoji)}</div><div style="flex:1"><h3>${esc(p.name)} ${p.variety?`<span class="badge">${esc(p.variety)}</span>`:''} <span class="badge">栽培終了</span></h3><p>${esc(b?.name||p.place||'区画未設定')} ・ 栽培開始 ${fmt(p.date)} ・ 終了 ${p.endDate?fmt(p.endDate):'日付未記録'}</p></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="secondary" onclick="restorePlant(${p.id})">栽培中に戻す</button><button class="secondary danger-btn" onclick="deletePlant(${p.id})">削除</button></div></div>`}).join('');
+  document.getElementById('endedPlantList').innerHTML=endedHtml||'<div class="empty card">栽培終了の履歴はありません。</div>';
 }
 function renderBeds(){
  document.getElementById('bedList').innerHTML=data.beds.length?data.beds.map(b=>{let latest=(b.history||[]).slice().sort((a,c)=>c.year-a.year)[0];let ci=latest?cropInfo(latest.crop):null;return `<div class="bed card"><div style="flex:1"><h3>${esc(b.name)}</h3><p>${esc(b.type)} ・ 最新作付け：${latest?esc(latest.crop):'なし'} ${latest?`(${latest.year})`:''}</p></div><div style="display:flex;gap:6px;align-items:center"><div class="crop">${ci?.emoji||'🪴'}</div><button class="secondary" onclick="openEditBed(${b.id})">編集</button><button class="secondary danger-btn" onclick="deleteBed(${b.id})">削除</button></div></div>`}).join(''):'<div class="empty card">区画を追加すると連作管理ができます。</div>';
@@ -204,7 +211,7 @@ function openPlant(){
 function addPlant(e){
  e.preventDefault();let f=new FormData(e.target);let name=f.get('name');if(name==='__other')name=prompt('野菜名を入力してください')||'その他';
  let ci=cropInfo(name);let bid=f.get('bedId')?Number(f.get('bedId')):null;
- data.plants.push({id:Date.now(),name,variety:f.get('variety'),place:f.get('place'),emoji:ci.emoji,date:f.get('date'),bedId:bid});
+ data.plants.push({id:Date.now(),name,variety:f.get('variety'),place:f.get('place'),emoji:ci.emoji,date:f.get('date'),bedId:bid,ended:false,endDate:null});
  if(bid){let b=bed(bid);b.history=b.history||[];let y=Number(f.get('date').slice(0,4));b.history.push({year:y,crop:name,family:ci.family})}
  closeModal();save();
 }
@@ -231,6 +238,25 @@ function editPlant(e,id){
  if(newBedId){const b=bed(newBedId);b.history=b.history||[];const y=Number(f.get('date').slice(0,4));const existing=b.history.find(h=>Number(h.year)===y && h.crop===p.name);if(!existing)b.history.push({year:y,crop:name,family:ci.family});}
  closeModal();save();
 }
+function finishPlant(id){
+  const p=plant(id); if(!p)return;
+  if(!confirm(`「${p.name}」を抜いて栽培終了にしますか？\n栽培履歴は残したまま、栽培中の一覧から外します。`))return;
+  const endDate=prompt('栽培終了日を入力してください（YYYY-MM-DD）',today());
+  if(!endDate)return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(endDate))return alert('日付は YYYY-MM-DD 形式で入力してください。');
+  p.ended=true;
+  p.endDate=endDate;
+  save();
+}
+
+function restorePlant(id){
+  const p=plant(id); if(!p)return;
+  if(!confirm(`「${p.name}」を栽培中に戻しますか？`))return;
+  p.ended=false;
+  p.endDate=null;
+  save();
+}
+
 function deletePlant(id){
  const p=plant(id); if(!p)return; if(!confirm(`「${p.name}」を削除しますか？\nこの野菜に紐づく栽培記録・作業も削除します。`))return;
  data.plants=data.plants.filter(x=>x.id!==id); data.tasks=data.tasks.filter(x=>x.plantId!==id); data.records=data.records.filter(x=>x.plantId!==id);
@@ -250,13 +276,13 @@ function deleteBed(id){
 }
 function openTask(){openModal('作業を追加',`<form class="form" onsubmit="addTask(event)">
 <label>作業内容<input name="title" placeholder="例：トマトに追肥" required></label>
-<label>対象<select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
+<label>対象<select name="pid">${data.plants.filter(p=>!p.ended).map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
 <label>日付<input name="date" type="date" value="${today()}"></label>
 <button class="primary">登録する</button></form>`)}
 function addTask(e){e.preventDefault();let f=new FormData(e.target);data.tasks.push({id:Date.now(),title:f.get('title'),date:f.get('date'),plantId:Number(f.get('pid'))});closeModal();save()}
 function doneTask(id){data.tasks=data.tasks.filter(t=>t.id!==id);save()}
 function openRecord(){openModal('栽培記録',`<form class="form" onsubmit="addRecord(event)">
-<label>野菜<select name="pid">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
+<label>野菜<select name="pid">${data.plants.filter(p=>!p.ended).map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
 <label>種類<select name="type"><option>水やり</option><option>肥料</option><option>成長</option><option>病害虫</option><option>剪定</option><option>収穫</option></select></label>
 <label>日付<input name="date" type="date" value="${today()}"></label>
 <label>メモ<textarea name="text" placeholder="作業・状態を記録"></textarea></label>
@@ -379,7 +405,7 @@ function openPhoto(){
  openModal('📷 写真から肥料提案',`<div class="form">
 <p class="help">写真＋栽培履歴を安全なバックエンドへ送り、肥料候補・頻度・確認事項を提案します。APIキーはこの画面には保存しません。</p>
 <label>AI診断エンドポイント（任意）<input id="aiEndpoint" type="url" value="${esc(data.settings.aiEndpoint||'')}" placeholder="https://xxxxx.workers.dev/diagnose"></label>
-<label>植物<select id="photoPlant">${data.plants.map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
+<label>植物<select id="photoPlant">${data.plants.filter(p=>!p.ended).map(p=>`<option value="${p.id}">${esc(p.emoji)} ${esc(p.name)}</option>`).join('')}</select></label>
 <input id="photoInput" type="file" accept="image/*" capture="environment" onchange="previewPhoto(event)">
 <div id="photoArea"></div>
 <button class="primary" onclick="prepareDiagnosis()">診断を準備する</button>
