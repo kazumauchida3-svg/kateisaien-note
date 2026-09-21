@@ -336,55 +336,60 @@ function renderWeather(){
  const stale=data.weatherUpdatedAt && (Date.now()-data.weatherUpdatedAt>6*60*60*1000);
  el.innerHTML=`<div class="weather-head"><div class="weather-now"><div class="weather-icon">${weatherIcon(d.weather_code[0])}</div><div><div class="weather-temp">${Math.round(d.temperature_2m_max[0])}°</div><div class="weather-meta">${esc(data.settings.locationName)} ・ 予想雨量 ${Number(d.precipitation_sum[0]||0).toFixed(1)}mm ・ ET₀ ${Number(d.et0_fao_evapotranspiration[0]||0).toFixed(1)}mm</div><div class="weather-meta">最終更新：${updatedText}${stale?' ・ ⚠️ 6時間以上前':''}</div></div></div><button class="secondary" onclick="openLocation()">場所</button></div><div class="weather-grid">${days}</div><div class="recommend"><strong>水やり判断に予想雨量・降水確率・気温・ET₀を利用しています。</strong></div>`;
 }
+function isActivePlant(id){
+  const p=plant(id);
+  return !!p && !p.ended;
+}
+
+function isActivePlant(id){
+  const p=plant(id);
+  return !!p && !p.ended;
+}
+
 function waterScore(p){
- const c=cropInfo(p.name),w=data.weather?.daily;
- let last=lastWater(p),days=daysSince(last),score=days;
- if(c.water==='多め')score+=1;if(c.water==='少なめ')score-=1;
- if((p.place||'').includes('プランター')||(bed(p.bedId)?.type==='プランター'))score+=1;
- if(w){
-  const rainToday=Number(w.precipitation_sum?.[0]||0);
-  const rainTomorrow=Number(w.precipitation_sum?.[1]||0);
-  const probToday=Number(w.precipitation_probability_max?.[0]||0);
-  const t=Number(w.temperature_2m_max?.[0]||0);
-  const et=Number(w.et0_fao_evapotranspiration?.[0]||0);
-  if(rainToday>=8)score-=4;else if(rainToday>=3)score-=2;
-  if(rainTomorrow>=8)score-=2;else if(rainToday+rainTomorrow>=10)score-=2;
-  if(probToday>=70)score-=1;if(t>=32)score+=1;if(et>=5)score+=1;if(et>=7)score+=1;
- }
- return {score,last,days};
+  if(!p || p.ended)return {score:-999,last:lastWater(p),days:daysSince(lastWater(p)),inactive:true};
+  const c=cropInfo(p.name),w=data.weather?.daily;
+  let last=lastWater(p),days=daysSince(last),score=days;
+  if(c.water==='多め')score+=1;
+  if(c.water==='少なめ')score-=1;
+  if((p.place||'').includes('プランター')||(bed(p.bedId)?.type==='プランター'))score+=1;
+  if(w){
+    const rain=Number(w.precipitation_sum[0]||0),prob=Number(w.precipitation_probability_max[0]||0),t=Number(w.temperature_2m_max[0]||0),et=Number(w.et0_fao_evapotranspiration[0]||0);
+    if(rain>=8)score-=4;
+    else if(rain>=3)score-=2;
+    if(prob>=70)score-=1;
+    if(t>=32)score+=1;
+    if(et>=5)score+=1;
+    if(et>=7)score+=1;
+  }
+  return {score,last,days};
 }
 function renderWaterAdvice(){
- const el=document.getElementById('waterAdvice');
- if(!data.plants.length){el.innerHTML='<div class="empty card">野菜を登録してください。</div>';return}
- const w=data.weather?.daily;
- el.innerHTML=data.plants.map(p=>{
-  const s=waterScore(p),c=cropInfo(p.name);
-  let title,reason,cls='';
-  const rainToday=Number(w?.precipitation_sum?.[0]||0);
-  const rainTomorrow=Number(w?.precipitation_sum?.[1]||0);
-  const probToday=Number(w?.precipitation_probability_max?.[0]||0);
-  const t=Number(w?.temperature_2m_max?.[0]||0);
-  const et=Number(w?.et0_fao_evapotranspiration?.[0]||0);
-  if(w&&rainToday>=8){
-   title='今日は水やり不要の可能性が高い';
-   reason=`今日の予想雨量 ${rainToday.toFixed(1)}mm。${rainTomorrow>=3?`明日も ${rainTomorrow.toFixed(1)}mmの予想です。`:''} 土が湿っている場合は控えめに。`;
-   cls='warning';
-  }else if(w&&rainTomorrow>=8&&s.score<3){
-   title='今日は土を確認して、明日の雨を待つ選択も';
-   reason=`今日 ${rainToday.toFixed(1)}mm、明日 ${rainTomorrow.toFixed(1)}mmの予想。土が乾いていなければ水やりを控えめに。`;
-   cls='warning';
-  }else if(s.score>=3){
-   title='💧 朝の水やりがおすすめ';
-   reason=`前回${s.last?fmt(s.last):'記録なし'}。${w?`今日の予想雨量 ${rainToday.toFixed(1)}mm・降水確率 ${probToday}%・最高${Math.round(t)}℃・ET₀ ${et.toFixed(1)}mm。`:''}`;
-  }else if(s.score>=1){
-   title='土の表面を確認して判断';
-   reason=`前回${s.last?fmt(s.last):'記録なし'}。${w?`今日の予想雨量 ${rainToday.toFixed(1)}mm・降水確率 ${probToday}%。`:''} 葉がしおれていなければ、土の乾き具合を確認。`;
-  }else{
-   title='今日は控えめでOK';
-   reason=`前回${s.last?fmt(s.last):'記録なし'}。${w?`今日 ${rainToday.toFixed(1)}mm、明日 ${rainTomorrow.toFixed(1)}mmの予想。`:''} 過湿に注意。`;
+  const el=document.getElementById('waterAdvice');
+  const activePlants=data.plants.filter(p=>!p.ended);
+  if(!activePlants.length){
+    el.innerHTML='<div class="empty card">栽培中の野菜を登録してください。</div>';
+    return;
   }
-  return `<div class="card pad ${cls}"><b>${esc(c.emoji)} ${esc(p.name)}　${title}</b><p style="margin:6px 0 0">${esc(reason)}</p><small class="help">※予想雨量は水やり判断に利用しています。実際の降雨量・土の状態で調整してください。</small></div>`
- }).join('');
+  el.innerHTML=activePlants.map(p=>{
+    const s=waterScore(p),c=cropInfo(p.name),w=data.weather?.daily;
+    let title,reason,cls='';
+    if(w&&Number(w.precipitation_sum[0]||0)>=8){
+      title='今日は水やり不要の可能性が高い';
+      reason=`予想降水量 ${Number(w.precipitation_sum[0]).toFixed(1)}mm。土が湿っている場合は控えめに。`;
+      cls='warning';
+    }else if(s.score>=3){
+      title='💧 朝の水やりがおすすめ';
+      reason=`前回${s.last?fmt(s.last):'記録なし'}。${w?`最高${Math.round(w.temperature_2m_max[0])}℃・ET₀ ${Number(w.et0_fao_evapotranspiration[0]||0).toFixed(1)}mm。`:''}`;
+    }else if(s.score>=1){
+      title='土の表面を確認して判断';
+      reason=`前回${s.last?fmt(s.last):'記録なし'}。葉がしおれていなければ、土の乾き具合を確認。`;
+    }else{
+      title='今日は控えめでOK';
+      reason=`前回${s.last?fmt(s.last):'記録なし'}。過湿に注意。`;
+    }
+    return `<div class="card pad ${cls}"><b>${esc(c.emoji)} ${esc(p.name)}　${title}</b><p style="margin:6px 0 0">${esc(reason)}</p><small class="help">※これは目安です。鉢・土・日当たりで変わります。</small></div>`;
+  }).join('');
 }
 function currentSeason(){const m=new Date().getMonth()+1;return m<=6?'春':m<=8?'夏':m<=11?'秋':'冬'}
 function rotationCandidates(b,season,pref){
